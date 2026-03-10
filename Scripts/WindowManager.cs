@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Nox.Editor.Panel {
+namespace Nox.Editor.Panel.Runtime {
 	public class WindowManager {
 		private static readonly List<Window> Windows = new();
 

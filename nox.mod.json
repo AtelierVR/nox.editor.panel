@@ -22,16 +22,11 @@
       "website": "https://hactazia.fr/"
     }
   ],
-  "contributors": [],
-  "relations": [],
   "entrypoints": {
     "editor": [
-      "Nox.Editor.Panel.Editor",
-      "Nox.Editor.Panel.DefaultPanel",
-      "Nox.Editor.Panel.MenuItemPanel"
+      "Nox.Editor.Panel.Runtime.Editor",
+      "Nox.Editor.Panel.Runtime.DefaultPanel",
+      "Nox.Editor.Panel.Runtime.MenuItemPanel"
     ]
-  },
-  "references": [],
-  
-  "permissions": []
+  }
 }

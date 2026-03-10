@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using Logger = Nox.CCK.Utils.Logger;
 
-namespace Nox.Editor.Panel {
+namespace Nox.Editor.Panel.Runtime {
 	public class DefaultPanel : IEditorModInitializer, IPanel {
 		private static readonly string[] PanelPath = { "default" };
 

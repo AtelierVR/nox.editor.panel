@@ -3,7 +3,7 @@ using System.Linq;
 using Nox.CCK.Mods;
 using Nox.CCK.Utils;
 
-namespace Nox.Editor.Panel {
+namespace Nox.Editor.Panel.Runtime {
 	public class PanelManager {
 		private static IPanel[] GetPanelsByRegister()
 			=> Editor.CoreAPI?.ModAPI

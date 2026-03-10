@@ -3,7 +3,7 @@ using Nox.CCK.Mods.Cores;
 using Nox.CCK.Mods.Initializers;
 using Nox.CCK.Utils;
 
-namespace Nox.Editor.Panel {
+namespace Nox.Editor.Panel.Runtime {
 	public class Editor : IEditorModInitializer, IPanelAPI {
 		internal static IEditorModCoreAPI CoreAPI;
 

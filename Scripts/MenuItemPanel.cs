@@ -5,7 +5,7 @@ using System.Reflection;
 using Nox.CCK.Mods.Cores;
 using UnityEditor;
 
-namespace Nox.Editor.Panel {
+namespace Nox.Editor.Panel.Runtime {
 	public class MenuItemPanel : IPanelRegister {
 		private MenuItemMethodPanel[] _panels = Array.Empty<MenuItemMethodPanel>();
 
