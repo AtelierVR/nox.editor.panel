@@ -12,9 +12,10 @@ namespace Nox.Editor.Panel.Runtime {
 		public void OnInitializeEditor(IEditorModCoreAPI api) {
 			_panels = AppDomain.CurrentDomain.GetAssemblies()
 				.SelectMany(assembly => assembly.GetTypes())
+				.Where(type => !typeof(EditorWindow).IsAssignableFrom(type))
 				.SelectMany(type => type.GetMethods(BindingFlags.Static | BindingFlags.Public))
 				.Select(method => method.GetCustomAttributes(typeof(MenuItem), false).FirstOrDefault() is not MenuItem attr ? default : (attr, method))
-				.Where(pair => pair != default && pair.attr.menuItem.StartsWith("Nox/"))
+				.Where(pair => pair != default && pair.attr.menuItem.StartsWith("Nox/") && !pair.attr.validate)
 				.OrderBy(pair => pair.attr.priority)
 				.Select(method => new MenuItemMethodPanel(method.attr, method.method))
 				.ToArray();
