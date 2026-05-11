@@ -4,9 +4,7 @@
         <ui:VisualElement class="container" style="flex-grow: 1; flex-direction: row;">
             <uie:ToolbarMenu text="Menu" name="menu" style="border-right-width: 0;" />
             <uie:ToolbarBreadcrumbs name="navigation" style="flex-grow: 1; margin-left: -1px;" />
-            <ui:VisualElement name="options" style="flex-grow: 0;">
-                <uie:ToolbarButton text="Button" />
-            </ui:VisualElement>
+            <ui:VisualElement name="options" style="flex-grow: 0; flex-direction: row;" />
         </ui:VisualElement>
     </uie:Toolbar>
     <ui:GroupBox name="container" class="container">

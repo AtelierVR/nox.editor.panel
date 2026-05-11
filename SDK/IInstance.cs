@@ -11,6 +11,14 @@ namespace Nox.Editor.Panel {
 		public IPanel GetPanel();
 
 		/// <summary>
+		/// Get the toolbar option buttons exposed by this instance in the panel's options area.
+		/// Instances can override this to add buttons (e.g. switching between Builder and Publisher).
+		/// </summary>
+		/// <returns></returns>
+		public IToolOption[] GetOptions() 
+			=> Array.Empty<IToolOption>();
+
+		/// <summary>
 		/// Get the window that this instance belongs to.
 		/// </summary>
 		/// <returns></returns>

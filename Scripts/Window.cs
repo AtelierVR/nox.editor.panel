@@ -75,6 +75,7 @@ namespace Nox.Editor.Panel.Runtime {
 		private ToolbarMenu _menu;
 		private ToolbarBreadcrumbs _breadcrumbs;
 		private VisualElement _content;
+		private VisualElement _options;
 
 		public ToolbarMenu Menu
 			=> _menu ??= rootVisualElement.Q<ToolbarMenu>("menu");
@@ -84,6 +85,9 @@ namespace Nox.Editor.Panel.Runtime {
 
 		public VisualElement Content
 			=> _content ??= rootVisualElement.Q<VisualElement>("content");
+
+		public VisualElement Options
+			=> _options ??= rootVisualElement.Q<VisualElement>("options");
 
 		private void UpdateMenu() {
 			if (Menu != null) {
@@ -108,7 +112,22 @@ namespace Nox.Editor.Panel.Runtime {
 				}
 			}
 
-			// other UI updates can go here
+			UpdateOptions();
+		}
+
+		private void UpdateOptions() {
+			if (Options == null) return;
+			Options.Clear();
+			var active = GetActive();
+			if (active == null) return;
+			foreach (var opt in active.GetOptions()) {
+				var btn = new ToolbarButton(opt.OnClick) { text = opt.Label };
+				if (!string.IsNullOrEmpty(opt.Tooltip))
+					btn.tooltip = opt.Tooltip;
+				if (opt.IsActive)
+					btn.AddToClassList("unity-toolbar-button--active");
+				Options.Add(btn);
+			}
 		}
 
 		private void UpdateContent() {
