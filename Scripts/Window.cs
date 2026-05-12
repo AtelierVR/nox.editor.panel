@@ -48,7 +48,6 @@ namespace Nox.Editor.Panel.Runtime {
 		}
 
 		public void OnDestroy() {
-			Logger.LogDebug("Closing window", tag: nameof(Window), context: this);
 			GetActive()?.OnDestroy();
 			WindowManager.RemoveWindow(this);
 			_active = null;
@@ -67,7 +66,6 @@ namespace Nox.Editor.Panel.Runtime {
 		}
 
 		public new void Show() {
-			Logger.LogDebug("Showing window", tag: nameof(Window), context: this);
 			base.Show();
 			GetActive()?.OnFocus();
 		}
@@ -94,7 +92,8 @@ namespace Nox.Editor.Panel.Runtime {
 				Menu.menu.MenuItems().Clear();
 				var panels = PanelManager.GetPanels();
 				foreach (var panel in panels)
-					Menu.menu.AppendAction(panel.GetLabel(), OnMenuClick);
+					if (panel.IsVisible())
+						Menu.menu.AppendAction(panel.GetLabel(), OnMenuClick);
 
 				var active = GetActive();
 				if (active != null)
@@ -121,12 +120,36 @@ namespace Nox.Editor.Panel.Runtime {
 			var active = GetActive();
 			if (active == null) return;
 			foreach (var opt in active.GetOptions()) {
-				var btn = new ToolbarButton(opt.OnClick) { text = opt.Label };
-				if (!string.IsNullOrEmpty(opt.Tooltip))
-					btn.tooltip = opt.Tooltip;
-				if (opt.IsActive)
-					btn.AddToClassList("unity-toolbar-button--active");
-				Options.Add(btn);
+				if (opt is DropdownToolOption dropdown) {
+					var menu = new ToolbarMenu { text = $"{opt.Label}: {dropdown.Value}" };
+					if (!string.IsNullOrEmpty(opt.Tooltip)) menu.tooltip = opt.Tooltip;
+					foreach (var choice in dropdown.Choices) {
+						var captured = choice;
+						menu.menu.AppendAction(
+							captured,
+							_ => {
+								dropdown.Select(captured);
+								menu.text = $"{opt.Label}: {dropdown.Value}";
+							},
+							a => dropdown.Value == captured
+								? DropdownMenuAction.Status.Checked
+								: DropdownMenuAction.Status.Normal
+						);
+					}
+					Options.Add(menu);
+				} else if (opt is InputToolOption search) {
+					var field = new ToolbarSearchField();
+					field.value = search.Value;
+					field.AddToClassList("toolbar-input");
+					if (!string.IsNullOrEmpty(opt.Tooltip)) field.tooltip = opt.Tooltip;
+					field.RegisterValueChangedCallback(evt => search.SetValue(evt.newValue));
+					Options.Add(field);
+				} else {
+					var btn = new ToolbarButton(opt.OnClick) { text = opt.Label };
+					if (!string.IsNullOrEmpty(opt.Tooltip)) btn.tooltip = opt.Tooltip;
+					if (opt.IsActive) btn.AddToClassList("unity-toolbar-button--active");
+					Options.Add(btn);
+				}
 			}
 		}
 
@@ -137,15 +160,12 @@ namespace Nox.Editor.Panel.Runtime {
 			var active = GetActive();
 			if (active == null) return;
 			var content = active.GetContent();
-			content.style.flexGrow = 1;
+			content.AddToClassList("flex-grow");
 			Content.Add(content);
 		}
 
 		private void OnMenuClick(DropdownMenuAction action) {
 			var panels = PanelManager.GetPanels();
-			Logger.LogDebug($"{string.Join(" ", panels.Select(e => e.GetLabel()))}"
-				, tag: nameof(Window)
-				, context: this);
 			foreach (var panel in panels) {
 				if (panel.GetLabel() != action.name)
 					continue;
@@ -176,11 +196,11 @@ namespace Nox.Editor.Panel.Runtime {
 
 		public void CreateGUI() {
 			rootVisualElement.Clear();
-			rootVisualElement.style.flexGrow = 1;
+			rootVisualElement.AddToClassList("flex-grow");
 			var content = Resources.Load<VisualTreeAsset>("Document").CloneTree();
 			content.styleSheets.Add(Resources.Load<StyleSheet>("Style"));
 			content.styleSheets.Add(Resources.Load<StyleSheet>("styles/index"));
-			content.style.flexGrow = 1;
+			content.AddToClassList("flex-grow");
 			rootVisualElement.Add(content);
 			UpdateMenu();
 			UpdateContent();

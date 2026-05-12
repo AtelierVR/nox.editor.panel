@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Nox.Editor.Panel {
 	/// <summary>
@@ -44,5 +45,59 @@ namespace Nox.Editor.Panel {
 		}
 
 		public void OnClick() => _onClick?.Invoke();
+	}
+
+	/// <summary>
+	/// A toolbar dropdown option. Renders as a ToolbarMenu with selectable choices.
+	/// </summary>
+	public class DropdownToolOption : IToolOption {
+		public string        Label    { get; }
+		public string        Tooltip  { get; }
+		public bool          IsActive => false;
+		public List<string>  Choices  { get; }
+		public string        Value    { get; private set; }
+
+		private readonly Action<string> _onChange;
+
+		public DropdownToolOption(string label, List<string> choices, string initial, Action<string> onChange, string tooltip = null) {
+			Label     = label;
+			Choices   = choices;
+			Value     = initial;
+			_onChange = onChange;
+			Tooltip   = tooltip;
+		}
+
+		public void OnClick() { }
+
+		public void Select(string value) {
+			Value = value;
+			_onChange?.Invoke(value);
+		}
+	}
+
+	/// <summary>
+	/// A toolbar search-bar option. Renders as a ToolbarSearchField.
+	/// </summary>
+	public class InputToolOption : IToolOption {
+		public string Label    { get; }
+		public string Tooltip  { get; }
+		public bool   IsActive => false;
+		public string Value    { get; private set; }
+
+		private readonly Action<string> _onChange;
+
+		public InputToolOption(string label, Action<string> onChange, string tooltip = null) {
+			Label     = label;
+			_onChange = onChange;
+			Tooltip   = tooltip;
+			Value     = string.Empty;
+		}
+
+		public void OnClick() { }
+
+		public void SetValue(string value) {
+			Value = value;
+			_onChange?.Invoke(value);
+		}
 	}
 }

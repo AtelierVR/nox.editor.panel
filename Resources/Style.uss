@@ -2,6 +2,12 @@
     flex-grow: 1;
 }
 
+.toolbar-input {
+    flex-grow: 0;
+    min-width: 80px;
+    max-width: 160px;
+}
+
 .container {
     max-width: 512px;
     margin-right: auto;

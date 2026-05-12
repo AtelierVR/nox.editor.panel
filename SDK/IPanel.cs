@@ -17,6 +17,12 @@ namespace Nox.Editor.Panel {
 			=> false;
 
 		/// <summary>
+		/// Whether this panel should appear in the navigation menu.
+		/// </summary>
+		public bool IsVisible()
+			=> true;
+
+		/// <summary>
 		/// Get an instance of the panel.
 		/// </summary>
 		/// <returns></returns>
