@@ -6,7 +6,7 @@
   ],
   "name": "Editor Panel",
   "version": "1.0.0",
-  "description": "Provides the editor panel for Nox Editor.",
+  "description": "Editor panel UI framework for Nox.",
   "license": "GPL-3.0",
   "icon": null,
   "contact": {
