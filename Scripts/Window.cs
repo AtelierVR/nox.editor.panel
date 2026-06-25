@@ -159,9 +159,18 @@ namespace Nox.Editor.Panel.Runtime {
 			Content.Clear();
 			var active = GetActive();
 			if (active == null) return;
-			var content = active.GetContent();
-			content.AddToClassList("flex-grow");
-			Content.Add(content);
+
+			try {
+				var content = active.GetContent();
+				content.AddToClassList("flex-grow");
+				Content.Add(content);
+			} catch (Exception ex) {
+				var panel = active.GetPanel();
+				Editor.CoreAPI?.LoggerAPI?.LogException(
+					new Exception($"GetContent() failed for panel '{panel?.GetLabel() ?? "?"}' (title: '{active.GetTitle()}')", ex),
+					context: this
+				);
+			}
 		}
 
 		private void OnMenuClick(DropdownMenuAction action) {
