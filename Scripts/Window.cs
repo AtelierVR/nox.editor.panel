@@ -143,7 +143,7 @@ namespace Nox.Editor.Panel.Runtime {
 			if (active == null) return;
 			foreach (var opt in active.GetOptions()) {
 				if (opt is DropdownToolOption dropdown) {
-					var button = new ToolbarButton { text = $"{opt.Label}: {dropdown.Value} {DropdownArrow}" };
+					var button = new ToolbarButton { text = $"{opt.Label}: {dropdown.Value}" };
 					if (!string.IsNullOrEmpty(opt.Tooltip)) button.tooltip = opt.Tooltip;
 					button.RegisterCallback<ClickEvent>(_ => ShowDropdownPopup(button, dropdown));
 					Options.Add(button);
