@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Nox.CCK.Utils;
+using UnityEditor.IMGUI.Controls;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -70,13 +71,23 @@ namespace Nox.Editor.Panel.Runtime {
 			GetActive()?.OnFocus();
 		}
 
-		private ToolbarMenu _menu;
+
+		private ToolbarButton _menu;
 		private ToolbarBreadcrumbs _breadcrumbs;
 		private VisualElement _content;
 		private VisualElement _options;
 
-		public ToolbarMenu Menu
-			=> _menu ??= rootVisualElement.Q<ToolbarMenu>("menu");
+		public ToolbarButton Menu {
+			get {
+				if (_menu != null)
+					return _menu;
+
+				_menu = rootVisualElement.Q<ToolbarButton>("menu");
+				_menu?.RegisterCallback<ClickEvent>(_ => OpenPanelMenu());
+
+				return _menu;
+			}
+		}
 
 		public ToolbarBreadcrumbs Breadcrumbs
 			=> _breadcrumbs ??= rootVisualElement.Q<ToolbarBreadcrumbs>("navigation");
@@ -89,13 +100,12 @@ namespace Nox.Editor.Panel.Runtime {
 
 		private void UpdateMenu() {
 			if (Menu != null) {
-				Menu.menu.MenuItems().Clear();
-				var panels = PanelManager.GetPanels();
-				foreach (var panel in panels)
-					if (panel.IsVisible())
-						Menu.menu.AppendAction(panel.GetLabel(), OnMenuClick);
-
 				var active = GetActive();
+				Menu.text = active != null
+					? ShortLabel(active.GetPanel().GetLabel())
+					: "Menu";
+				Menu.tooltip = active?.GetPanel().GetLabel() ?? "Switch panel";
+
 				if (active != null)
 					titleContent = new GUIContent($"{active.GetTitle()} - {Application.productName}");
 			}
@@ -114,6 +124,18 @@ namespace Nox.Editor.Panel.Runtime {
 			UpdateOptions();
 		}
 
+		/// <summary>
+		/// Last segment of a panel label: "Editor/Translations" -> "Translations". The full path is
+		/// already shown by the breadcrumbs, so the toolbar button only needs the leaf name.
+		/// </summary>
+		private static string ShortLabel(string label) {
+			if (string.IsNullOrEmpty(label))
+				return label ?? string.Empty;
+
+			var index = label.LastIndexOf('/');
+			return index < 0 ? label : label.Substring(index + 1);
+		}
+
 		private void UpdateOptions() {
 			if (Options == null) return;
 			Options.Clear();
@@ -121,22 +143,10 @@ namespace Nox.Editor.Panel.Runtime {
 			if (active == null) return;
 			foreach (var opt in active.GetOptions()) {
 				if (opt is DropdownToolOption dropdown) {
-					var menu = new ToolbarMenu { text = $"{opt.Label}: {dropdown.Value}" };
-					if (!string.IsNullOrEmpty(opt.Tooltip)) menu.tooltip = opt.Tooltip;
-					foreach (var choice in dropdown.Choices) {
-						var captured = choice;
-						menu.menu.AppendAction(
-							captured,
-							_ => {
-								dropdown.Select(captured);
-								menu.text = $"{opt.Label}: {dropdown.Value}";
-							},
-							a => dropdown.Value == captured
-								? DropdownMenuAction.Status.Checked
-								: DropdownMenuAction.Status.Normal
-						);
-					}
-					Options.Add(menu);
+					var button = new ToolbarButton { text = $"{opt.Label}: {dropdown.Value} {DropdownArrow}" };
+					if (!string.IsNullOrEmpty(opt.Tooltip)) button.tooltip = opt.Tooltip;
+					button.RegisterCallback<ClickEvent>(_ => ShowDropdownPopup(button, dropdown));
+					Options.Add(button);
 				} else if (opt is InputToolOption search) {
 					var field = new ToolbarSearchField();
 					field.value = search.Value;
@@ -151,6 +161,62 @@ namespace Nox.Editor.Panel.Runtime {
 					Options.Add(btn);
 				}
 			}
+		}
+
+		/// <summary>
+		/// Opens the panel switcher: a tree menu built like Unity's "Add Component" menu (see
+		/// <see cref="TreeMenuWindow"/>), so nested panel labels such as "Editor/Logger" become submenus
+		/// instead of a flat list.
+		/// </summary>
+		private void OpenPanelMenu() {
+			var choices = new List<string>();
+			foreach (var panel in PanelManager.GetPanels()) {
+				if (!panel.IsVisible())
+					continue;
+
+				var label = panel.GetLabel();
+				if (!choices.Contains(label))
+					choices.Add(label);
+			}
+
+			if (choices.Count == 0)
+				return;
+
+			var active = GetActive();
+			var menu = new TreeMenuWindow(
+				new AdvancedDropdownState(),
+				"Panels",
+				choices,
+				active?.GetPanel().GetLabel(),
+				ActivatePanel
+			);
+
+			menu.Show(Menu.worldBound);
+		}
+
+		/// <summary>
+		/// Opens a toolbar option dropdown as an "Add Component"-like menu (see <see cref="TreeMenuWindow"/>).
+		/// Choices without a '/' render as a single level, '/'-separated ones become submenus.
+		/// </summary>
+		private void ShowDropdownPopup(VisualElement anchor, DropdownToolOption dropdown) {
+			var rect = anchor.worldBound;
+			if (float.IsNaN(rect.x) || float.IsNaN(rect.y) || float.IsNaN(rect.width) || rect.width <= 0f || rect.height <= 0f) {
+				Logger.LogError($"Cannot open dropdown '{dropdown.Label}': invalid anchor rect ({rect}).", tag: nameof(Window), context: this);
+				return;
+			}
+
+			var menu = new TreeMenuWindow(
+				new AdvancedDropdownState(),
+				dropdown.Label,
+				dropdown.Choices,
+				dropdown.Value,
+				value => {
+					dropdown.Select(value);
+					UpdateOptions();
+				}
+			);
+
+			menu.Show(rect);
 		}
 
 		private void UpdateContent() {
@@ -173,28 +239,31 @@ namespace Nox.Editor.Panel.Runtime {
 			}
 		}
 
-		private void OnMenuClick(DropdownMenuAction action) {
+		/// <summary>
+		/// Makes the panel matching <paramref name="label"/> the active one in this window.
+		/// </summary>
+		private void ActivatePanel(string label) {
 			var panels = PanelManager.GetPanels();
 			foreach (var panel in panels) {
-				if (panel.GetLabel() != action.name)
+				if (panel.GetLabel() != label)
 					continue;
 
 				var active = GetActive();
 				if (active != null && panel == active.GetPanel()) {
-					Logger.LogDebug($"Panel '{action.name}' is already active. Focusing window.", tag: nameof(Window), context: this);
+					Logger.LogDebug($"Panel '{label}' is already active. Focusing window.", tag: nameof(Window), context: this);
 					Focus();
 					return;
 				}
 
 				var instances = panel.GetInstances();
 				if (!panel.AllowMultiple() && instances.Length > 0) {
-					Logger.LogDebug($"Panel '{action.name}' does not allow multiple instances and one is already open. Focusing existing instance.", tag: nameof(Window), context: this);
+					Logger.LogDebug($"Panel '{label}' does not allow multiple instances and one is already open. Focusing existing instance.", tag: nameof(Window), context: this);
 					instances[0].GetWindow().Focus();
 					return;
 				}
 
 				if (!SetActive(panel)) {
-					Logger.LogError($"Failed to set active panel to '{action.name}'", tag: nameof(Window), context: this);
+					Logger.LogError($"Failed to set active panel to '{label}'", tag: nameof(Window), context: this);
 					return;
 				}
 
@@ -205,6 +274,10 @@ namespace Nox.Editor.Panel.Runtime {
 
 		public void CreateGUI() {
 			rootVisualElement.Clear();
+			_menu       = null;
+			_breadcrumbs = null;
+			_content    = null;
+			_options    = null;
 			rootVisualElement.AddToClassList("flex-grow");
 			var content = Resources.Load<VisualTreeAsset>("Document").CloneTree();
 			content.styleSheets.Add(Resources.Load<StyleSheet>("Style"));

@@ -48,7 +48,7 @@ namespace Nox.Editor.Panel {
 	}
 
 	/// <summary>
-	/// A toolbar dropdown option. Renders as a ToolbarMenu with selectable choices.
+	/// A toolbar dropdown option. Renders as a button opening a searchable popup window listing the choices.
 	/// </summary>
 	public class DropdownToolOption : IToolOption {
 		public string        Label    { get; }
