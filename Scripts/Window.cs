@@ -101,9 +101,7 @@ namespace Nox.Editor.Panel.Runtime {
 		private void UpdateMenu() {
 			if (Menu != null) {
 				var active = GetActive();
-				Menu.text = active != null
-					? ShortLabel(active.GetPanel().GetLabel())
-					: "Menu";
+				Menu.text = "Menu";
 				Menu.tooltip = active?.GetPanel().GetLabel() ?? "Switch panel";
 
 				if (active != null)
