@@ -50,7 +50,7 @@ namespace Nox.Editor.Panel.Runtime {
 					return true;
 				}
 
-			Logger.LogError($"NoPanel found for {string.Join("/", path)} with mod {mod.GetMetadata().GetId()}");
+			Logger.LogError($"NoPanel found for {string.Join("/", path)} with mod {mod.Metadata.Id}");
 			panel = null;
 			return false;
 		}
