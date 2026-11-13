@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Nox.CCK.Language;
 using Nox.CCK.Utils;
 using UnityEditor.IMGUI.Controls;
 using UnityEditor.UIElements;
@@ -52,6 +53,22 @@ namespace Nox.Editor.Panel.Runtime {
 			GetActive()?.OnDestroy();
 			WindowManager.RemoveWindow(this);
 			_active = null;
+		}
+
+		private void OnEnable()
+			=> LanguageManager.OnLanguageChanged.AddListener(OnLanguageChanged);
+
+		private void OnDisable()
+			=> LanguageManager.OnLanguageChanged.RemoveListener(OnLanguageChanged);
+
+		/// <summary>
+		/// The tab title, the menu tooltip and the breadcrumbs come from the panel: re-apply them when the
+		/// language changes, and let the active instance localize its own content.
+		/// </summary>
+		private void OnLanguageChanged(string language) {
+			// Only the chrome is ours: the content localizes itself (LocalizedInspectorEditor-like pass).
+			UpdateMenu();
+			base.Repaint();
 		}
 
 		public new void Repaint() {
